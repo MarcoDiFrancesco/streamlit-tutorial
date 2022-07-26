@@ -10,16 +10,18 @@ from time import sleep
 
 # Download Data
 link = f"http://data.insideairbnb.com/united-states/ny/new-york-city/2022-06-03/visualisations/listings.csv"
-df = pd.read_csv(link)
+# df = pd.read_csv(link)
 
 # Cache Data
-# @st.cache
-# def function():
-#     df = pd.read_csv(link)
-#     sleep(3)
-#     return df
-# df = function()
-        
+@st.cache
+def download_csv():
+    df = pd.read_csv(link)
+    sleep(3)
+    return df
+
+
+df = download_csv()
+
 
 # Show table
 st.table(df.head(10))
@@ -50,13 +52,7 @@ st.markdown(f"Dataframe contains {len(df1)} row")
 # Map
 st.map(df1[["latitude", "longitude"]])
 
-
-
-
-
-
-
-# Distribution of property price
+# Property price distribution: slider
 min, max = st.sidebar.slider(
     "Price range",
     int(df.price.min()),
@@ -64,13 +60,32 @@ min, max = st.sidebar.slider(
     (0, 600),
 )
 
+# Property price distribution: filter dataframe
 df2 = df[(df.price > min) & (df.price < max)]
-f = px.histogram(
-    df2, x="price", nbins=15, title="Price distribution"
-)
+
+# Property price distribution: histogram
+f = px.histogram(df2, x="price", nbins=15, title="Price distribution")
 f.update_xaxes(title="Price")
 f.update_yaxes(title="No. of listings")
 st.plotly_chart(f)
 
 # Filter by Neighborhood
 neighborhood = st.radio("Neighborhood", df.neighbourhood_group.unique())
+df3 = df[df.neighbourhood_group == neighborhood]
+st.map(df3[["latitude", "longitude"]])
+
+# Cats and dogs
+pics = {
+    "Cat": "https://cdn.pixabay.com/photo/2016/09/24/22/20/cat-1692702_960_720.jpg",
+    "Puppy": "https://cdn.pixabay.com/photo/2019/03/15/19/19/puppy-4057786_960_720.jpg",
+    "Sci-fi city": "https://storage.needpix.com/rsynced_images/science-fiction-2971848_1280.jpg",
+}
+pic = st.selectbox("Picture choices", list(pics.keys()), 0)
+st.image(pics[pic], use_column_width=True, caption=pics[pic])
+
+# Party time
+st.markdown("## Party time!")
+st.write("Yay! You're done with this tutorial of Streamlit. Click below to celebrate.")
+btn = st.button("Celebrate!")
+if btn:
+    st.balloons()
